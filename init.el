@@ -96,7 +96,7 @@
 ;; Set the color theme ;;
 ;;                     ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'color-theme)
+;(require 'color-theme)
 ;(color-theme-initialize) ;; required first time
 (color-theme-dark-laptop)
 
@@ -109,7 +109,7 @@
              '(font . "Source Code Pro-13"))
 
 ;; Disable popup boxes
-(setq use-dialog-box nil)
+;(setq use-dialog-box nil)
 
 ;; Set exec PATH
 (setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin"))
@@ -126,3 +126,12 @@
 (setq helm-buffers-list t)
 (setq helm-M-x-fuzzy-match t)
 (setq helm-locate-fuzzy-match t)
+
+;; Set linum-mode
+(setq linum-mode t)
+
+;; Set SSH for tramp Mode
+(setq tramp-default-method "ssh")
+
+;; Set paredit Mode
+(setq paredit-mode t)
