@@ -1,137 +1,192 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                          ;;
-;; Check and install el-get ;;
-;;                          ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(add-to-list 'load-path "~/.emacs.d/el-get/el-get")
+(require 'package)
 
-(unless (require 'el-get nil 'noerror)
-  (with-current-buffer
-      (url-retrieve-synchronously
-       "https://raw.githubusercontent.com/dimitri/el-get/master/el-get-install.el")
-    (goto-char (point-max))
-    (eval-print-last-sexp)))
+(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+(package-initialize)
 
-(add-to-list 'el-get-recipe-path "~/.emacs.d/el-get-user/recipes")
-(el-get 'sync)
+(defvar udit/packages
+  '(;; haskell mode 
+    haskell-mode
+    
+    ;; silver searcher
+    ag
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                           ;;
-;; Install required packages ;;
-;;                           ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq
- my:el-get-packages
- '(el-get
+    ;; makes handling lisp expressions much, much easier
+    ;; Cheatsheet: http://www.emacswiki.org/emacs/PareditCheatsheet
+    paredit
 
-   ;; Misc
-   auto-complete
-   better-defaults
-   projectile
-   undo-tree
 
-   ;; Color themes
-   color-theme
-   color-theme-almost-monokai
-   color-theme-zenburn
-   rainbow-delimiters
-   rainbow-mode
+    ;; Autocompletion
+    company
 
-   ;; Clojure
-   clojure-mode
-   clj-refactor
-   cider
-   ac-cider
-   paredit
+    ;; key bindings and code colorization for Clojure
+    ;; https://github.com/clojure-emacs/clojure-mode
+    clojure-mode
 
-   ;; Haskell
-   ac-ghc-mod
-   haskell-mode))
-   
-(el-get 'sync my:el-get-packages)
+    ;; extra syntax highlighting for clojure
+    clojure-mode-extra-font-locking
 
-;;;;;;;;;;;;;;;;;;;;;;;;
-;;                    ;;
-;; Clojure Mode Hooks ;;
-;;                    ;;
-;;;;;;;;;;;;;;;;;;;;;;;;
-(add-hook 'clojure-mode-hook 'turn-on-eldoc-mode)
-(setq nrepl-popup-stacktraces nil)
-(add-to-list 'same-window-buffer-names "<em>nrepl</em>")
+    ;; integration with a Clojure REPL
+    ;; https://github.com/clojure-emacs/cider
+    cider
+    ac-cider
+    ;; cider-eval-sexp-fu
+    clj-refactor
 
-;; General Auto-Complete
-(require 'auto-complete-config)
-(setq ac-delay 0.0)
-(setq ac-quick-help-delay 0.5)
-(ac-config-default)
+    ;; Basic interaction with a Clojure subprocess
+    ;; Conflicts with CIDER C-c C-z
+    ;; inf-clojure
 
-;; ac-cider (Auto-complete for the nREPL)
-(require 'ac-cider)
-(add-hook 'cider-mode-hook 'ac-cider-setup)
-(add-hook 'cider-repl-mode-hook 'ac-cider-setup)
-(add-to-list 'ac-modes 'cider-mode)
-(add-to-list 'ac-modes 'cider-repl-mode)
+    ;; formatting of let-like forms
+    ;; align-cljlet
 
-;; Poping-up contextual documentation
-(eval-after-load "cider"
-  '(define-key cider-mode-map (kbd "s-d") 'ac-cider-popup-doc))
+    ;; Syntax checking
+    flycheck
+    flycheck-clojure
+    flycheck-pos-tip
 
-;; Add Paredit mode
+    ;; Semantic region expansion
+    expand-region
+
+    ;; HAML syntax highlighting and indentation
+    haml-mode
+
+    ;; allow ido usage in as many contexts as possible. see
+    ;; customizations/navigation.el line 23 for a description
+    ;; of ido
+    ido-ubiquitous
+
+    ;; Allow to go to Java class source.
+    ;; javap
+
+    ;; Enhances M-x to allow easier execution of commands. Provides
+    ;; a filterable list of possible commands in the minibuffer
+    ;; http://www.emacswiki.org/emacs/Smex
+    smex
+
+    ;; symbol search
+    smartscan
+
+    ;; Searching project files.
+    ivy
+    swiper
+    fiplr
+
+    ;; project navigation
+    projectile
+
+    ;; colorful parenthesis matching
+    rainbow-delimiters
+
+    ;; highlight word under point
+    highlight-symbol
+
+    ;; edit html tags like sexps
+    tagedit
+
+    ;; git integration
+    magit
+
+    ;; better interface for grep
+    wgrep
+
+    ;; clipboard integration
+    ;; clipmon
+     
+    ;; Go to last change
+    goto-last-change
+
+    ;; Undo Tree
+    undo-tree
+
+    ;; Markdown
+    markdown-mode
+
+    ;; Dash at point
+    dash-at-point
+
+    ;; Org mode
+    org))
+
+(dolist (pkg udit/packages)
+  (when (not (package-installed-p pkg))
+    (package-install pkg)))
+
 (add-hook 'clojure-mode-hook 'paredit-mode)
-(add-hook 'clojure-mode-hook 'rainbow-delimiters-mode)
+(add-hook 'clojure-mode-hook 'show-paren-mode)
 
-;; Show parenthesis mode
-(show-paren-mode 1)
+(setq cider-repl-display-help-banner nil)
+(add-hook 'cider-repl-mode-hook 'paredit-mode)
+(add-hook 'cider-repl-mode-hook 'show-paren-mode)
 
-;; rainbow delimiters
-;; (global-rainbow-delimiters-mode)
+(global-set-key (kbd "C-x g") 'magit-status)
+(global-set-key (kbd "s-/") 'comment-or-uncomment-region)
+(eval-after-load 'cider-mode
+                     '(define-key text-mode-map (kbd "s-d") 'cider-doc-map))
 
-;; Global key shortcuts
-(global-set-key [f8] 'other-frame)
-(global-set-key [f7] 'paredit-mode)
-(global-set-key [f9] 'cider-jack-in)
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
+(load-theme 'monokai t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;
-;;                     ;;
-;; Set the color theme ;;
-;;                     ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;
-;(require 'color-theme)
-;(color-theme-initialize) ;; required first time
-(color-theme-dark-laptop)
+(toggle-frame-fullscreen)
+(toggle-tool-bar-mode-from-frame)
 
-;;;;;;;;;;;;;;;;;;;;;;
-;;                  ;;
-;; Set default font ;;
-;;                  ;;
-;;;;;;;;;;;;;;;;;;;;;;
-(add-to-list 'default-frame-alist
-             '(font . "Source Code Pro-13"))
-
-;; Disable popup boxes
-;(setq use-dialog-box nil)
-
-;; Set exec PATH
 (setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin"))
 (setq exec-path (append exec-path '("/usr/local/bin")))
 
-;; Fullscreen
-(toggle-frame-fullscreen)
+(global-company-mode)
+(projectile-mode)
+(global-set-key (kbd "s-t") 'fiplr-find-file)
 
-;; Helm setting
-(require 'helm-config)
-(require 'helm-cmd-t)
-(global-set-key (kbd "M-x") 'helm-M-x)
-(global-set-key (kbd "s-t") 'helm-cmd-t)
-(setq helm-buffers-list t)
-(setq helm-M-x-fuzzy-match t)
-(setq helm-locate-fuzzy-match t)
+;; Replace return key with newline-and-indent when in cider mode.
+(add-hook 'cider-mode-hook '(lambda () (local-set-key (kbd "RET") 'newline-and-indent)))
 
-;; Set linum-mode
-(setq linum-mode t)
+; Syntax Highlighting
+(require 'highlight-symbol)
+(global-set-key (kbd "C-.") 'highlight-symbol-at-point)
+(global-set-key (kbd "s-r") 'ag)
 
-;; Set SSH for tramp Mode
-(setq tramp-default-method "ssh")
+;; Indendation configs as per -
+;; https://github.com/weavejester/compojure/wiki/Emacs-indentation
+(require 'clojure-mode)
 
-;; Set paredit Mode
-(setq paredit-mode t)
+(define-clojure-indent
+  (defroutes 'defun)
+  (GET 2)
+  (POST 2)
+  (PUT 2)
+  (DELETE 2)
+  (HEAD 2)
+  (ANY 2)
+  (context 2))
+(put 'upcase-region 'disabled nil)
+
+;; Initiate linum mode always
+(global-linum-mode 1)
+
+;; Set keys to navigate panes
+(global-set-key (kbd "<S-up>") 'windmove-up)
+(global-set-key (kbd "<S-down>") 'windmove-down)
+(global-set-key (kbd "<S-left>") 'windmove-left)
+(global-set-key (kbd "<S-right>") 'windmove-right)
+
+;; Settings for ivy
+(ivy-mode 1)
+(setq ivy-use-virtual-buffers t)
+
+;; Settings for fiplr
+(setq fiplr-root-markers '(".git" ".svn"))
+(setq fiplr-ignored-globs '((directories (".git" ".svn"))
+                            (files ("*.jpg" "*.png" "*.zip" "*~"))))
+
+;; Settings for Dash
+(global-set-key (kbd "s-.") 'dash-at-point)
+
+;; Settings for autocomplete cider (ac-cider)
+(require 'ac-cider)
+(add-hook 'cider-mode-hook 'ac-flyspell-workaround)
+(add-hook 'cider-mode-hook 'ac-cider-setup)
+(add-hook 'cider-repl-mode-hook 'ac-cider-setup)
+(eval-after-load "auto-complete"
+  '(progn
+     (add-to-list 'ac-modes 'cider-mode)
+     (add-to-list 'ac-modes 'cider-repl-mode)))
